@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="renderer" content="webkit">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-touch-fullscreen" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no,email=no">
+    <meta name="screen-orientation" content="portrait">
+    <meta name="x5-orientation" content="portrait">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css">
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/jquery-confirm.min.css">
+    <title>首页</title>
+    <script type="text/javascript" src="js/jquery-1.8.0.min.js"></script>
+    <script type="text/javascript" src="js/jquery-confirm.min.js"></script>
+    <script type="text/javascript" src="js/progressbar.min.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            $(".inul li").click(function () {
+                var num = $(this).index();
+                $(".inul li").removeClass("herbg");
+                $(this).addClass("herbg");
+                $(".inform").css("display", "none");
+                $(this).parent().parent().find(".inform").eq(num).css("display", "block");
+                clearInput();
+            });
+        });
+        function clearInput() {
+            $('#sendNo').val('');
+            $('#sendPwd').val('');
+            $('#receiveNo').val('');
+            $('#receivePwd').val('');
+        }
+
+    </script>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div id="index">
+    <ul class="clearfix inul">
+        <li class="herbg">送卡</li>
+        <li>收卡</li>
+    </ul>
+    <div class="inform">
+        <form>
+            <input type="text" id="sendNo" placeholder="卡号"/>
+            <input type="password" id="sendPwd" placeholder="密码"/>
+            <button type="button" onclick="send()">设置赠送密码</button>
+        </form>
+    </div>
+    <div class="inform" style="display:none;">
+        <form>
+            <input type="text" id="receiveNo" placeholder="卡号"/>
+            <input type="password" id="receivePwd" placeholder="密码"/>
+            <button type="button" onclick="receive()">关联卡片</button>
+        </form>
+    </div>
+</div>
+<script type="text/javascript">
+    var bar = new ProgressBar.Circle('#progress', {
+        from: {color: '#1d6892'},
+        to: {color: '#fff'},
+        trailColor: '#eee',
+        strokeWidth: 10,
+        duration: 3000
+    });
+    function send() {
+        if ($("#sendNo").val() == '') {
+            $.confirm({
+                title: '信息不完整',
+                content: '请输入卡号'
+            });
+            return;
+        }
+        if ($("#sendPwd").val() == '') {
+            $.confirm({
+                title: '信息不完整',
+                content: '请输入密码'
+            });
+            return;
+        }
+
+        $('#progress').show();
+        this.bar.animate(1);
+        $.post("http://dongguochao.com:8080/annual/sendGift", {
+                openid: "open1",
+                privatePwd: $('#sendPwd').val(),
+                cardNo: $('#sendNo').val()
+            },
+            function (data) {
+                $('#progress').hide();
+                bar.stop();
+                if (JSON.parse(data).code != 0) {
+                    $.confirm({
+                        title: '错误',
+                        content: JSON.parse(data).message
+                    });
+                } else {
+                    $.confirm({
+                        title: '恭喜您！',
+                        content: '已经成功设置分享密码！可以告诉朋友咯！',
+                        buttons: {
+                            ok: {
+                                text: "知道了",
+                                btnClass: 'btn-primary',
+                                keys: ['enter'],
+                                action: function(){
+                                    clearInput();
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+    }
+    function receive() {
+        if ($("#receiveNo").val() == '') {
+            $.confirm({
+                title: '信息不完整',
+                content: '请输入卡号'
+            });
+            return;
+        }
+        if ($("#receivePwd").val() == '') {
+            $.confirm({
+                title: '信息不完整',
+                content: '请输入密码'
+            });
+            return;
+        }
+        $('#progress').show();
+        this.bar.animate(1);
+        $.post("http://dongguochao.com:8080/annual/reciveGift", {
+                openid: "open1",
+                privatePwd: $('#receivePwd').val(),
+                cardNo: $('#receiveNo').val()
+            },
+            function (data) {
+                $('#progress').hide();
+                bar.stop();
+                if (JSON.parse(data).code != 0) {
+                    $.confirm({
+                        title: '错误',
+                        content: JSON.parse(data).message
+                    });
+                } else {
+                    alert("已经将卡收到我的卡包中");
+                    $.confirm({
+                        title: '恭喜您！',
+                        content: '已经将卡收到我的卡包中',
+                        buttons: {
+                            ok: {
+                                text: "知道了",
+                                btnClass: 'btn-primary',
+                                keys: ['enter'],
+                                action: function(){
+                                    clearInput();
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+    }
+</script>
+</body>
+</html>
